@@ -21,23 +21,36 @@ const EditPopup: React.FC<EditPopupProps> = ({ open, onClose, patient, onSave })
     setEditedPatient(patient);
   }, [patient]);
 
-  const handleSave = () => {
-    if (editedPatient) {
-      onSave(editedPatient);
-      onClose();
-    }
-  };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setEditedPatient((prevPatient: Patient | null) => ({
+    setEditedPatient(prevPatient => ({
       ...(prevPatient as Patient || {}),
       [name]: value
     }));
   };
-  
-  
-  
+
+  const handleSave = async () => {
+    if (editedPatient) {
+        try {
+          const url = 'http://localhost:5000/edit/' + editedPatient.id.toString();
+          const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(editedPatient)
+          });
+          if (response.ok) {
+            onSave(editedPatient);
+            onClose();
+          } else {
+            console.error('Failed to update new patient');
+          }
+        } catch (error) {
+          console.error('Error updating new patient:', error);
+        }
+    }
+  };
 
   return (
     <Dialog open={open} onClose={onClose}>
@@ -46,17 +59,17 @@ const EditPopup: React.FC<EditPopupProps> = ({ open, onClose, patient, onSave })
         {editedPatient && (
           <>
             <TextField
-              name="firstName"
+              name="first_name"
               label="First Name"
-              value={editedPatient.firstName}
+              value={editedPatient.first_name}
               onChange={handleChange}
               fullWidth
               style={{ marginBottom: '16px' }}
             />
             <TextField
-              name="lastName"
+              name="last_name"
               label="Last Name"
-              value={editedPatient.lastName}
+              value={editedPatient.last_name}
               onChange={handleChange}
               fullWidth
               style={{ marginBottom: '16px' }}
@@ -86,9 +99,9 @@ const EditPopup: React.FC<EditPopupProps> = ({ open, onClose, patient, onSave })
               style={{ marginBottom: '16px' }}
             />
             <TextField
-              name="postCode"
+              name="post_code"
               label="Post Code"
-              value={editedPatient.postCode}
+              value={editedPatient.post_code}
               onChange={handleChange}
               fullWidth
               style={{ marginBottom: '16px' }}

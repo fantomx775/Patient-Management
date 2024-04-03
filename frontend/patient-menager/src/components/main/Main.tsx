@@ -9,70 +9,62 @@ import Paper from '@mui/material/Paper';
 import { Patient } from '../../types';
 import EditPopup from '../popups/edit/EditPopup';
 import AddPopup from '../popups/add/AddPopup';
-import React, { useState } from 'react';
+import DeleteDialog from '../popups/delete/DeleteDialog';
+import React, { useEffect, useState } from 'react';
 
 const Main = () => {
   const _patients: Patient[] = [
     {
       id: 1,
-      firstName: 'John',
-      lastName: 'Doe',
+      first_name: 'John',
+      last_name: 'Doe',
       pesel: '12345678901',
       street: 'Main Street',
       city: 'London',
-      postCode: '00-000',
-      createdAt: '2024-04-01', // example string date
-      updatedAt: '2024-04-01', // example string date
-    },
-    {
-      id: 2,
-      firstName: 'Jane',
-      lastName: 'Smith',
-      pesel: '23456789012',
-      street: 'Oak Avenue',
-      city: 'New York',
-      postCode: '12345',
-      createdAt: '2024-04-02', // example string date
-      updatedAt: '2024-04-02', // example string date
-    },
-    {
-      id: 3,
-      firstName: 'Michael',
-      lastName: 'Johnson',
-      pesel: '34567890123',
-      street: 'Elm Street',
-      city: 'Los Angeles',
-      postCode: '54321',
-      createdAt: '2024-04-03', // example string date
-      updatedAt: '2024-04-03', // example string date
-    },
-    {
-      id: 4,
-      firstName: 'Emily',
-      lastName: 'Brown',
-      pesel: '45678901234',
-      street: 'Cedar Road',
-      city: 'Paris',
-      postCode: '75001',
-      createdAt: '2024-04-04', // example string date
-      updatedAt: '2024-04-04', // example string date
-    },
-    {
-      id: 5,
-      firstName: 'David',
-      lastName: 'Wilson',
-      pesel: '56789012345',
-      street: 'Pine Street',
-      city: 'Tokyo',
-      postCode: '100-0001',
-      createdAt: '2024-04-05', // example string date
-      updatedAt: '2024-04-05', // example string date
-    }
-  ];
+      post_code: '00-000',
+      created_at: '2024-04-01', // example string date
+      updated_at: '2024-04-01', // example string date
+    },];
   const [openEditPopup, setOpenEditPopup] = useState(false);
   const [openAddPopup, setOpenAddPopup] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [patients, setPatients] = useState<Patient[]>(_patients);
+  const [patients, setPatients] = useState<Patient[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try{
+        const response  = await fetch('http://localhost:5000/patients');
+        if(response.ok){
+          const data = await response.json();
+          let patients_list = [];
+          console.log('Data:', data);
+          for (let i = 0; i < data.length; i++) {
+            const patient = data[i];
+            console.log('Patient:', patient.first_name);
+            patients_list.push({
+              id: patient.id,
+              first_name: patient.first_name,
+              last_name: patient.last_name,
+              pesel: patient.pesel,
+              street: patient.street,
+              city: patient.city,
+              post_code: patient.post_code,
+              created_at: patient.created_at,
+              updated_at: patient.updated_at
+            });
+          }
+          
+          setPatients(data);
+        } else {
+          console.error('Error fetching data');
+        }
+      } catch (error){
+        console.error('Error fetching data', error);       
+      }
+    };
+    fetchData();
+  }, []);
 
 
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -99,6 +91,11 @@ const Main = () => {
     setOpenEditPopup(true);
   };
 
+  const handleDelete = (patient: Patient) => {
+    setSelectedPatient(patient);
+    setOpenDeleteDialog(true);
+  };
+
   const handleAdd = () => {
     setOpenAddPopup(true);
   };
@@ -113,6 +110,24 @@ const Main = () => {
     setOpenAddPopup(false);
   };
 
+  const handleCloseEditPopup = () => {
+    setOpenEditPopup(false);
+  };
+
+  const handleCloseDeleteDialog = (deleted: boolean) => {
+    if (deleted) {
+      const index = patients.findIndex(patient => patient.id === selectedPatient?.id);
+      if (index !== -1) {
+        const updatedPatients = [...patients];
+        updatedPatients.splice(index, 1);
+        setPatients(updatedPatients);
+      } else {
+        console.error('Deleted patient not found in the patients array.');
+      }
+    }
+    setOpenDeleteDialog(false);
+  }
+
   const handleSaveEdit = (editedPatient: Patient) => {
     console.log('Edited Patient:', editedPatient);
   
@@ -126,13 +141,6 @@ const Main = () => {
       console.error('Edited patient not found in the patients array.');
     }
   };
-  
-
-  const handleCloseEditPopup = () => {
-    setOpenEditPopup(false);
-  };
-
-
 
   return (
     <div>
@@ -148,8 +156,8 @@ const Main = () => {
                 <StyledTableCell align="right">Street</StyledTableCell>
                 <StyledTableCell align="right">City</StyledTableCell>
                 <StyledTableCell align="right">Post Code</StyledTableCell>
-                <StyledTableCell align="right">createdAt</StyledTableCell>
-                <StyledTableCell align="right">updatedAt</StyledTableCell>
+                <StyledTableCell align="right">Created At</StyledTableCell>
+                <StyledTableCell align="right">Updated At</StyledTableCell>
                 <StyledTableCell align="right">Actions</StyledTableCell>
               </TableRow>
             </TableHead>
@@ -159,19 +167,18 @@ const Main = () => {
                   <StyledTableCell component="th" scope="row">
                     {patient.id}
                   </StyledTableCell>
-                  <StyledTableCell align="right">{patient.firstName}</StyledTableCell>
-                  <StyledTableCell align="right">{patient.lastName}</StyledTableCell>
+                  <StyledTableCell align="right">{patient.first_name}</StyledTableCell>
+                  <StyledTableCell align="right">{patient.last_name}</StyledTableCell>
                   <StyledTableCell align="right">{patient.pesel}</StyledTableCell>
                   <StyledTableCell align="right">{patient.street}</StyledTableCell>
                   <StyledTableCell align="right">{patient.city}</StyledTableCell>
-                  <StyledTableCell align="right">{patient.postCode}</StyledTableCell>
-                  <StyledTableCell align="right">{patient.createdAt}</StyledTableCell>
-                  <StyledTableCell align="right">{patient.updatedAt}</StyledTableCell>
+                  <StyledTableCell align="right">{patient.post_code}</StyledTableCell>
+                  <StyledTableCell align="right">{patient.created_at}</StyledTableCell>
+                  <StyledTableCell align="right">{patient.updated_at}</StyledTableCell>
                   <StyledTableCell align="right">
                     <button onClick={() => handleEdit(patient)}>edit</button>
-                  </StyledTableCell>
-                  <StyledTableCell align="right">
-                    <button>delete</button>
+                    <button onClick={() => handleDelete(patient)}>delete</button>
+
                   </StyledTableCell>
                 </StyledTableRow>
               ))}
@@ -192,6 +199,11 @@ const Main = () => {
         open={openAddPopup}
         onClose={handleCloseAddPopup}
         onSave={handleSaveAdd}/>}
+      {openDeleteDialog && <DeleteDialog 
+      onClose={handleCloseDeleteDialog}
+      patient={selectedPatient}
+      onDelete={handleDelete}
+      />}
     </div>
   );
 }

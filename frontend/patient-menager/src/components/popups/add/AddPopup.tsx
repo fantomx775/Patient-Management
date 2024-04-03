@@ -16,19 +16,37 @@ interface AddPatientPopupProps {
 const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave }) => {
   const [newPatient, setNewPatient] = useState<Patient>({
     id: -1,
-    firstName: '',
-    lastName: '',
+    first_name: '',
+    last_name: '',
     pesel: '',
     street: '',
     city: '',
-    postCode: '',
-    createdAt: '',
-    updatedAt: ''
+    post_code: '',
+    created_at: '',
+    updated_at: ''
   });
 
-  const handleSave = () => {
-    onSave(newPatient);
-    onClose();
+  const handleSave = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newPatient)
+      });
+      if (response.ok) {
+        newPatient.id = (await response.json()).id;
+        newPatient.created_at = new Date().toISOString();
+        newPatient.updated_at = new Date().toISOString();
+        onSave(newPatient);
+        onClose();
+      } else {
+        console.error('Failed to save new patient');
+      }
+    } catch (error) {
+      console.error('Error saving new patient:', error);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,18 +62,18 @@ const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave
       <DialogTitle>Add New Patient</DialogTitle>
       <DialogContent style={{ paddingBottom: '24px', paddingTop: '24px' }}>
         <TextField
-          name="firstName"
+          name="first_name"
           label="First Name"
-          value={newPatient.firstName}
+          value={newPatient.first_name}
           onChange={handleChange}
           fullWidth
           placeholder="Enter first name"
           style={{ marginBottom: '16px' }}
         />
         <TextField
-          name="lastName"
+          name="last_name"
           label="Last Name"
-          value={newPatient.lastName}
+          value={newPatient.last_name}
           onChange={handleChange}
           fullWidth
           placeholder="Enter last name"
@@ -89,9 +107,9 @@ const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave
           style={{ marginBottom: '16px' }}
         />
         <TextField
-          name="postCode"
+          name="post_code"
           label="Post Code"
-          value={newPatient.postCode}
+          value={newPatient.post_code}
           onChange={handleChange}
           fullWidth
           placeholder="Enter post code"

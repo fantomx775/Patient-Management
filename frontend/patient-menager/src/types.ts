@@ -1,12 +1,12 @@
 export interface Patient {
     id: number;
-    firstName: string;
-    lastName: string;
+    first_name: string;
+    last_name: string;
     pesel: string;
     street: string;
     city: string;
-    postCode: string;
-    createdAt: string;
-    updatedAt: string;
+    post_code: string;
+    created_at: string;
+    updated_at: string;
   }
   
