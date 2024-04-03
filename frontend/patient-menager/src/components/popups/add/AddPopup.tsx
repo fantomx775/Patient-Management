@@ -6,12 +6,14 @@ import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import { Patient } from '../../../types';
+import { validatePatientData } from '../../../validation';
 
 interface AddPatientPopupProps {
   open: boolean;
   onClose: () => void;
   onSave: (newPatient: Patient) => void;
 }
+
 
 const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave }) => {
   const [newPatient, setNewPatient] = useState<Patient>({
@@ -27,6 +29,11 @@ const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave
   });
 
   const handleSave = async () => {
+    const errors = validatePatientData(newPatient);
+    if (errors.length > 0) {
+      alert('Invalid data: ' + errors.join(', '));
+      return;
+    }
     try {
       const response = await fetch('http://localhost:5000/create', {
         method: 'POST',
@@ -37,8 +44,8 @@ const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave
       });
       if (response.ok) {
         newPatient.id = (await response.json()).id;
-        newPatient.created_at = new Date().toISOString();
-        newPatient.updated_at = new Date().toISOString();
+        newPatient.created_at = (await response.json()).created_at;
+        newPatient.updated_at = (await response.json()).updated_at;
         onSave(newPatient);
         onClose();
       } else {

@@ -6,6 +6,7 @@ import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import { Patient } from '../../../types';
+import { validatePatientData } from '../../../validation';
 
 interface EditPopupProps {
   open: boolean; 
@@ -15,7 +16,7 @@ interface EditPopupProps {
 }
 
 const EditPopup: React.FC<EditPopupProps> = ({ open, onClose, patient, onSave }) => {
-  const [editedPatient, setEditedPatient] = useState<Patient | null>(null);
+  const [editedPatient, setEditedPatient] = useState<Patient | null>(patient);
 
   useEffect(() => {
     setEditedPatient(patient);
@@ -30,6 +31,12 @@ const EditPopup: React.FC<EditPopupProps> = ({ open, onClose, patient, onSave })
   };
 
   const handleSave = async () => {
+    const errors = validatePatientData(editedPatient!);
+    console.log('Errors:', editedPatient);
+    if (errors.length > 0) {
+      alert('Invalid data: ' + errors.join(', '));
+      return;
+    }
     if (editedPatient) {
         try {
           const url = 'http://localhost:5000/edit/' + editedPatient.id.toString();
