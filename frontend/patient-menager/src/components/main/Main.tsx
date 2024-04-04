@@ -11,6 +11,7 @@ import EditPopup from '../popups/edit/EditPopup';
 import AddPopup from '../popups/add/AddPopup';
 import DeleteDialog from '../popups/delete/DeleteDialog';
 import React, { useEffect, useState } from 'react';
+import SearchDialog from '../popups/search/SearchDialog';
 
 const Main = () => {
   const _patients: Patient[] = [
@@ -28,41 +29,43 @@ const Main = () => {
   const [openEditPopup, setOpenEditPopup] = useState(false);
   const [openAddPopup, setOpenAddPopup] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openSearchDialog, setOpenSearchDialog] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [patients, setPatients] = useState<Patient[]>([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try{
-        const response  = await fetch('http://localhost:5000/patients');
-        if(response.ok){
-          const data = await response.json();
-          let patients_list = [];
-          console.log('Data:', data);
-          for (let i = 0; i < data.length; i++) {
-            const patient = data[i];
-            console.log('Patient:', patient.first_name);
-            patients_list.push({
-              id: patient.id,
-              first_name: patient.first_name,
-              last_name: patient.last_name,
-              pesel: patient.pesel,
-              street: patient.street,
-              city: patient.city,
-              post_code: patient.post_code,
-              created_at: patient.created_at,
-              updated_at: patient.updated_at
-            });
-          }
-          
-          setPatients(data);
-        } else {
-          console.error('Error fetching data');
+  const fetchData = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/patients');
+      if (response.ok) {
+        const data = await response.json();
+        let patients_list = [];
+        console.log('Data:', data);
+        for (let i = 0; i < data.length; i++) {
+          const patient = data[i];
+          console.log('Patient:', patient.first_name);
+          patients_list.push({
+            id: patient.id,
+            first_name: patient.first_name,
+            last_name: patient.last_name,
+            pesel: patient.pesel,
+            street: patient.street,
+            city: patient.city,
+            post_code: patient.post_code,
+            created_at: patient.created_at,
+            updated_at: patient.updated_at
+          });
         }
-      } catch (error){
-        console.error('Error fetching data', error);       
+
+        setPatients(data);
+      } else {
+        console.error('Error fetching data');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching data', error);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -100,6 +103,10 @@ const Main = () => {
     setOpenAddPopup(true);
   };
 
+  const handleSearch = () => {
+    setOpenSearchDialog(true);
+  }
+
   const handleSaveAdd = (newPatient: Patient) => {
     console.log('New Patient:', newPatient);
     const updatedPatients = [newPatient, ...patients];
@@ -113,6 +120,14 @@ const Main = () => {
   const handleCloseEditPopup = () => {
     setOpenEditPopup(false);
   };
+
+  const handleCloseSearchDialog = () => {
+    setOpenSearchDialog(false);
+  }
+
+  const handleSearching = (patients: Patient[]) => {
+    setPatients(patients);
+  }
 
   const handleCloseDeleteDialog = (deleted: boolean) => {
     if (deleted) {
@@ -130,9 +145,9 @@ const Main = () => {
 
   const handleSaveEdit = (editedPatient: Patient) => {
     console.log('Edited Patient:', editedPatient);
-  
+
     const index = patients.findIndex(patient => patient.id === editedPatient.id);
-  
+
     if (index !== -1) {
       const updatedPatients = [...patients];
       updatedPatients[index] = editedPatient;
@@ -143,22 +158,22 @@ const Main = () => {
   };
 
   return (
-    <div>
-      <div>
+    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <div style={{ maxWidth: '1200px' }}>
         <TableContainer component={Paper}>
           <Table sx={{ minWidth: 700 }} aria-label="customized table">
             <TableHead>
               <TableRow>
                 <StyledTableCell>ID</StyledTableCell>
-                <StyledTableCell align="right">First Name</StyledTableCell>
-                <StyledTableCell align="right">Last Name</StyledTableCell>
-                <StyledTableCell align="right">PESEL</StyledTableCell>
-                <StyledTableCell align="right">Street</StyledTableCell>
-                <StyledTableCell align="right">City</StyledTableCell>
-                <StyledTableCell align="right">Post Code</StyledTableCell>
-                <StyledTableCell align="right">Created At</StyledTableCell>
-                <StyledTableCell align="right">Updated At</StyledTableCell>
-                <StyledTableCell align="right">Actions</StyledTableCell>
+                <StyledTableCell align="center">First Name</StyledTableCell>
+                <StyledTableCell align="center">Last Name</StyledTableCell>
+                <StyledTableCell align="center">PESEL</StyledTableCell>
+                <StyledTableCell align="center">Street</StyledTableCell>
+                <StyledTableCell align="center">City</StyledTableCell>
+                <StyledTableCell align="center">Post Code</StyledTableCell>
+                <StyledTableCell align="center">Created At</StyledTableCell>
+                <StyledTableCell align="center">Updated At</StyledTableCell>
+                <StyledTableCell align="center">Actions</StyledTableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -167,19 +182,19 @@ const Main = () => {
                   <StyledTableCell component="th" scope="row">
                     {patient.id}
                   </StyledTableCell>
-                  <StyledTableCell align="right">{patient.first_name}</StyledTableCell>
-                  <StyledTableCell align="right">{patient.last_name}</StyledTableCell>
-                  <StyledTableCell align="right">{patient.pesel}</StyledTableCell>
-                  <StyledTableCell align="right">{patient.street}</StyledTableCell>
-                  <StyledTableCell align="right">{patient.city}</StyledTableCell>
-                  <StyledTableCell align="right">{patient.post_code}</StyledTableCell>
-                  <StyledTableCell align="right">{patient.created_at}</StyledTableCell>
-                  <StyledTableCell align="right">{patient.updated_at}</StyledTableCell>
-                  <StyledTableCell align="right">
-                    <button onClick={() => handleEdit(patient)}>edit</button>
-                    <button onClick={() => handleDelete(patient)}>delete</button>
-
+                  <StyledTableCell align="center">{patient.first_name}</StyledTableCell>
+                  <StyledTableCell align="center">{patient.last_name}</StyledTableCell>
+                  <StyledTableCell align="center">{patient.pesel}</StyledTableCell>
+                  <StyledTableCell align="center">{patient.street}</StyledTableCell>
+                  <StyledTableCell align="center">{patient.city}</StyledTableCell>
+                  <StyledTableCell align="center">{patient.post_code}</StyledTableCell>
+                  <StyledTableCell align="center">{patient.created_at}</StyledTableCell>
+                  <StyledTableCell align="center">{patient.updated_at}</StyledTableCell>
+                  <StyledTableCell align="center" style={{ width: '150px' }}>
+                    <button style={{ marginRight: '5px', padding: '5px 10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }} onClick={() => handleEdit(patient)}>Edit</button>
+                    <button style={{ padding: '5px 10px', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }} onClick={() => handleDelete(patient)}>Delete</button>
                   </StyledTableCell>
+
                 </StyledTableRow>
               ))}
             </TableBody>
@@ -192,17 +207,24 @@ const Main = () => {
           onSave={handleSaveEdit}
         />}
       </div>
-      <div>
-        <button onClick={() => handleAdd()}>Add</button>
-      </div>
+    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
+      <button style={{ marginRight: '5px', padding: '5px 10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }} onClick={() => handleAdd()}>Add</button>
+      <button style={{ marginRight: '5px', padding: '5px 10px', backgroundColor: '#fd7e14', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }} onClick={() => handleSearch()}>Search</button>
+      <button style={{ padding: '5px 10px', backgroundColor: '#fd79a2', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }} onClick={() => fetchData()}>Get All</button>
+    </div>
       {openAddPopup && <AddPopup
         open={openAddPopup}
         onClose={handleCloseAddPopup}
-        onSave={handleSaveAdd}/>}
-      {openDeleteDialog && <DeleteDialog 
-      onClose={handleCloseDeleteDialog}
-      patient={selectedPatient}
-      onDelete={handleDelete}
+        onSave={handleSaveAdd} />}
+      {openDeleteDialog && <DeleteDialog
+        onClose={handleCloseDeleteDialog}
+        patient={selectedPatient}
+        onDelete={handleDelete}
+      />}
+      {openSearchDialog && <SearchDialog
+        open={openSearchDialog}
+        onSearch={handleSearching}
+        onClose={handleCloseSearchDialog}
       />}
     </div>
   );

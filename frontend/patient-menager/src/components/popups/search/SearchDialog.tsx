@@ -6,67 +6,55 @@ import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import { Patient } from '../../../types';
-import { validatePatientData } from '../../../validation';
 
-interface AddPatientPopupProps {
+interface SearchDialogProps {
   open: boolean;
   onClose: () => void;
-  onSave: (newPatient: Patient) => void;
+  onSearch: (patients: Patient[]) => void;
 }
 
-
-const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave }) => {
-  const [newPatient, setNewPatient] = useState<Patient>({
-    id: -1,
-    first_name: '',
-    last_name: '',
-    pesel: '',
-    street: '',
-    city: '',
-    post_code: '',
-    created_at: '',
-    updated_at: ''
-  });
-
-  const handleSave = async () => {
-    const errors = validatePatientData(newPatient);
-    if (errors.length > 0) {
-      alert('Invalid data: ' + errors.join(', '));
-      return;
-    }
-    try {
-      const response = await fetch('http://localhost:5000/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newPatient)
+const SearchDialog: React.FC<SearchDialogProps> = ({ open, onClose, onSearch }) => {
+    const [searchPatient, setSearchPatient] = useState<Patient>({
+        id: 14,
+        first_name: '',
+        last_name: '',
+        pesel: '',
+        street: '',
+        city: '',
+        post_code: '',
+        created_at: '',
+        updated_at: ''
       });
-      if (response.ok) {
-        const responseData = await response.json(); 
-        console.log('Response data:', responseData);
-        newPatient.id = responseData.id;
-        newPatient.created_at = responseData.created_at;
-        newPatient.updated_at = responseData.updated_at;
-        onSave(newPatient);
-        onClose();
-      } else {
-        const errorData = await response.json();
-        if (errorData.error === 'Patient with this PESEL already exists') {
-          alert('Patient with this PESEL already exists');
-        } else {
-          console.error('Failed to save new patient');
-        }
-      }
-    } catch (error) {
-      console.error('Error saving new patient:', error);
-    }
-  };
-  
+      
+
+      const handleSearch = () => {
+        const queryString = Object.entries(searchPatient)
+          .filter(([key, value]) => value !== '')
+          .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+          .join('&');
+        fetch(`http://localhost:5000/search/?${queryString}`)
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw new Error('Failed to search patients');
+            }
+          })
+          .then(data => {
+            onSearch(data);
+            onClose();
+          })
+          .catch(error => {
+            console.error('Error searching patients:', error);
+          });
+      };
+      
+      
+      
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setNewPatient(prevPatient => ({
+    setSearchPatient(prevPatient => ({
       ...prevPatient,
       [name]: value
     }));
@@ -74,12 +62,12 @@ const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Add New Patient</DialogTitle>
+      <DialogTitle>Search Patients</DialogTitle>
       <DialogContent style={{ paddingBottom: '24px', paddingTop: '24px' }}>
         <TextField
           name="first_name"
           label="First Name"
-          value={newPatient.first_name}
+          value={searchPatient.first_name}
           onChange={handleChange}
           fullWidth
           placeholder="Enter first name"
@@ -88,7 +76,7 @@ const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave
         <TextField
           name="last_name"
           label="Last Name"
-          value={newPatient.last_name}
+          value={searchPatient.last_name}
           onChange={handleChange}
           fullWidth
           placeholder="Enter last name"
@@ -97,7 +85,7 @@ const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave
         <TextField
           name="pesel"
           label="PESEL"
-          value={newPatient.pesel}
+          value={searchPatient.pesel}
           onChange={handleChange}
           fullWidth
           placeholder="Enter PESEL"
@@ -106,7 +94,7 @@ const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave
         <TextField
           name="street"
           label="Street"
-          value={newPatient.street}
+          value={searchPatient.street}
           onChange={handleChange}
           fullWidth
           placeholder="Enter street"
@@ -115,7 +103,7 @@ const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave
         <TextField
           name="city"
           label="City"
-          value={newPatient.city}
+          value={searchPatient.city}
           onChange={handleChange}
           fullWidth
           placeholder="Enter city"
@@ -124,7 +112,7 @@ const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave
         <TextField
           name="post_code"
           label="Post Code"
-          value={newPatient.post_code}
+          value={searchPatient.post_code}
           onChange={handleChange}
           fullWidth
           placeholder="Enter post code"
@@ -132,11 +120,11 @@ const AddPatientPopup: React.FC<AddPatientPopupProps> = ({ open, onClose, onSave
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleSave} color="primary">Save</Button>
+        <Button onClick={handleSearch} color="primary">Search</Button>
         <Button onClick={onClose} color="secondary">Cancel</Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default AddPatientPopup;
+export default SearchDialog;
