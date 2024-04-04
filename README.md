@@ -1,6 +1,3 @@
-Certainly! Here's the updated README with the additional information about setting up the PostgreSQL database and configuring the `.env` file:
-
-```markdown
 # Patient Management CRUD App
 
 This CRUD (Create, Read, Update, Delete) application is designed to manage patient records. It provides a user-friendly interface for adding, editing, deleting patients, and searching through the existing records. The app is built using React for the frontend, Python Flask for the backend, and PostgreSQL for the database.
